@@ -21,17 +21,24 @@ def steer(from_v, to_v, step=1):
         return tuple(np.round(from_v + vec).astype(int))
 
 def collision_free(grid, p1, p2):
-    steps = int(np.ceil(np.hypot(p2[0]-p1[0], p2[1]-p1[1])))
+    x1, y1 = p1
+    x2, y2 = p2
+    dx, dy  = x2 - x1, y2 - y1
+    steps   = max(abs(dx), abs(dy))
+
+    # Same cell?  Just check that single spot.
+    if steps == 0:
+        return grid[x1, y1] == 0      # True if free
+
     for i in range(steps + 1):
         t = i / steps
-        x = int(round(p1[0] + t * (p2[0] - p1[0])))
-        y = int(round(p1[1] + t * (p2[1] - p1[1])))
-        if grid[x, y]:
+        x = int(round(x1 + t * dx))
+        y = int(round(y1 + t * dy))
+        if grid[x, y] == 1:
             return False
     return True
 
 def plan(grid, start, goal, max_iters=2000):
-    print("STARTING RRT")
     start_time = time.time()
     tree = {start: None}
 
