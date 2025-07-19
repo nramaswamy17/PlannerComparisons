@@ -36,7 +36,6 @@ plots/
 *.png
 *.jpg
 *.jpeg
-*.pdf
 
 # Ignore IDE/editor settings
 .vscode/
