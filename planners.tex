@@ -775,7 +775,7 @@ Heuristic values: $h(A)=7.2$, $h(B)=0$, $h(C)=5.4$, $h(D)=2.2$, $h(E)=3.6$, $h(F
 \end{center}
 
 % ----------- PICTURE 5 ----------
-\subsection{Processing Vertex B (First Time)}
+\subsection{Finding Vertex B (First Time)}
 Note: B is found but algorithm continues to ensure optimality
 \begin{center}
 \begin{tikzpicture}[
@@ -791,7 +791,7 @@ Note: B is found but algorithm continues to ensure optimality
 \node[vertex, fill=green!60!black] (F) at (-1, -2) {F};
 \node[vertex, fill=red!60!black] (E) at (2, 0) {E};
 \node[vertex, fill=red!60!black] (D) at (4, 2) {D};
-\node[vertex, fill=green!60!black] (B) at (6, 0) {B};
+\node[vertex, fill=red!60!black] (B) at (6, 0) {B};
 \node[vertex, fill=red!60!black] (G) at (4, -2) {G};
 
 % Add f-value labels above vertices
@@ -848,7 +848,7 @@ Note: B is found but algorithm continues to ensure optimality
 \node[vertex, fill=green!60!black] (F) at (-1, -2) {F};
 \node[vertex, fill=red!60!black] (E) at (2, 0) {E};
 \node[vertex, fill=red!60!black] (D) at (4, 2) {D};
-\node[vertex, fill=green!60!black] (B) at (6, 0) {B};
+\node[vertex, fill=red!60!black] (B) at (6, 0) {B};
 \node[vertex, fill=red!60!black] (G) at (4, -2) {G};
 
 % Blue arrows for Picture 6 (pointing from child to parent)
@@ -949,7 +949,7 @@ Note: B is found but algorithm continues to ensure optimality
 \end{center}
 
 % ----------- PICTURE 8 ----------
-\subsection{Processing Vertex B (Second Time - Optimal)}
+\subsection{Finding Vertex B (Second Time - Optimal)}
 \begin{center}
 \begin{tikzpicture}[
     node distance=3cm,
@@ -1013,5 +1013,499 @@ Note: B is found but algorithm continues to ensure optimality
 The A* algorithm found the optimal path: A → C → E → B with total cost 6.
 
 Key insight: Even though B was first discovered via F with f=8.0, the algorithm continued and found a better path through C and E with f=6.0. This demonstrates why A* must continue until the goal is extracted from the priority queue with the minimum f-value.
+
+\section{D* Algorithm}
+
+\subsection{Overview}
+D* (Dynamic A*) algorithm finds the shortest path from a source vertex to a goal vertex by working backward from the goal. It's particularly useful for dynamic environments where edge costs can change after initial planning.
+
+\subsection{Algorithm}
+\textbf{Input:} A weighted directed graph $G = (V, E)$ with weight function $w: E \to \mathbb{R}_{\geq 0}$, source vertex $s \in V$, and goal vertex $t \in V$.
+
+\textbf{Output:} The shortest path from $s$ to $t$ and its cost.
+
+\textbf{Initialization:}
+\begin{enumerate}
+    \item Set $d(t) = 0$ and $d(v) = \infty$ for all $v \in V \setminus \{t\}$
+    \item Create a min-priority queue $Q$ based on $d$-values and insert $(t, 0)$
+    \item Initialize parent pointers: $\pi(v) = \text{NIL}$ for all $v \in V$
+\end{enumerate}
+
+\textbf{Main Loop:}
+\begin{enumerate}
+    \item While $Q$ is not empty:
+    \begin{enumerate}
+        \item Extract $(u, d_u) = \text{ExtractMin}(Q)$
+        \item If $u = s$, algorithm terminates (optional early termination)
+        \item For each neighbor $v$ of $u$ where $(v,u) \in E$:
+        \begin{enumerate}
+            \item Calculate tentative distance: $d_{\text{new}} = d(u) + w(v,u)$
+            \item If $d_{\text{new}} < d(v)$:
+            \begin{itemize}
+                \item Update $d(v) = d_{\text{new}}$
+                \item Update $\pi(v) = u$
+                \item Insert or update $(v, d(v))$ in $Q$
+            \end{itemize}
+        \end{enumerate}
+    \end{enumerate}
+\end{enumerate}
+
+\subsection{Path Reconstruction}
+To find the path from $s$ to $t$, start at $s$ and greedily move to the neighbor $u$ that minimizes $w(s,u) + d(u)$ until reaching $t$.
+
+\subsection{Correctness}
+D* is guaranteed to find the optimal path as it explores all vertices in increasing order of their shortest distance from the goal, similar to Dijkstra's algorithm but in reverse.
+
+\subsection{Complexity}
+\textbf{Time:} $O((|V| + |E|) \log |V|)$ using a binary heap\\
+\textbf{Space:} $O(|V|)$
+
+\subsection{Algorithm Requirements}
+\begin{enumerate}
+    \item Non-negative edge weights
+    \item Graph connectivity from goal to all reachable vertices
+    \item For dynamic replanning: efficient update mechanism for changed edges
+\end{enumerate}
+
+\subsection{Simple Example}
+% PICTURE 1 - Initial Graph
+\begin{center}
+\begin{tikzpicture}[
+    node distance=3cm,
+    vertex/.style={circle, draw, fill=gray!70, minimum size=1cm, font=\Large\bfseries},
+    edge/.style={draw, thick, color=purple!70},
+    weight/.style={fill=white, inner sep=2pt, font=\large}
+]
+
+% Define node positions
+\node[vertex] (A) at (-4, 0) {A};
+\node[vertex] (C) at (-1, 2) {C};
+\node[vertex] (F) at (-1, -2) {F};
+\node[vertex] (E) at (2, 0) {E};
+\node[vertex] (D) at (4, 2) {D};
+\node[vertex] (B) at (6, 0) {B};
+\node[vertex] (G) at (4, -2) {G};
+
+% Add source vertex label
+\node[below=0.5cm of A, draw, fill=white, rounded corners, inner sep=4pt] {Source Vertex};
+
+% Add goal vertex label
+\node[below=0.5cm of B, draw, fill=white, rounded corners, inner sep=4pt] {Goal Vertex};
+
+% Draw edges with weights
+\draw[edge] (A) -- (C) node[weight, midway] {3};
+\draw[edge] (A) -- (F) node[weight, midway] {2};
+\draw[edge] (C) -- (D) node[weight, midway] {4};
+\draw[edge] (C) -- (E) node[weight, midway] {1};
+\draw[edge] (C) -- (F) node[weight, midway] {2};
+\draw[edge] (E) -- (F) node[weight, midway] {3};
+\draw[edge] (E) -- (B) node[weight, midway] {2};
+\draw[edge] (F) -- (B) node[weight, midway] {6};
+\draw[edge] (D) -- (B) node[weight, midway] {1};
+\draw[edge] (B) -- (G) node[weight, midway] {2};
+\draw[edge] (F) -- (G) node[weight, midway] {5};
+
+\end{tikzpicture}
+\end{center}
+
+% PICTURE 2 - Algorithm Initialization
+\subsection{Algorithm Initialization}
+Starting from goal vertex B with distance 0
+\begin{center}
+\begin{tikzpicture}[
+    node distance=3cm,
+    vertex/.style={circle, draw, fill=gray!70, minimum size=1cm, font=\Large\bfseries},
+    edge/.style={draw, thick, color=purple!70},
+    weight/.style={fill=white, inner sep=2pt, font=\large}
+]
+
+% Define node positions
+\node[vertex, fill=red!60!black] (A) at (-4, 0) {A};
+\node[vertex, fill=red!60!black] (C) at (-1, 2) {C};
+\node[vertex, fill=red!60!black] (F) at (-1, -2) {F};
+\node[vertex, fill=red!60!black] (E) at (2, 0) {E};
+\node[vertex, fill=red!60!black] (D) at (4, 2) {D};
+\node[vertex, fill=green!60!black] (B) at (6, 0) {B};
+\node[vertex, fill=red!60!black] (G) at (4, -2) {G};
+
+% Add distance labels above vertices
+\node[above=0.3cm of A, font=\large\bfseries] {$\infty$};
+\node[above=0.3cm of C, font=\large\bfseries] {$\infty$};
+\node[above=0.3cm of F, font=\large\bfseries] {$\infty$};
+\node[above=0.3cm of E, font=\large\bfseries] {$\infty$};
+\node[above=0.3cm of D, font=\large\bfseries] {$\infty$};
+\node[above=0.3cm of B, font=\large\bfseries] {0};
+\node[above=0.3cm of G, font=\large\bfseries] {$\infty$};
+
+% Add source vertex label
+\node[below=0.5cm of A, draw, fill=white, rounded corners, inner sep=4pt] {Source Vertex};
+
+% Add goal vertex label
+\node[below=0.5cm of B, draw, fill=white, rounded corners, inner sep=4pt] {Goal Vertex};
+
+% Draw edges with weights
+\draw[edge] (A) -- (C) node[weight, midway] {3};
+\draw[edge] (A) -- (F) node[weight, midway] {2};
+\draw[edge] (C) -- (D) node[weight, midway] {4};
+\draw[edge] (C) -- (E) node[weight, midway] {1};
+\draw[edge] (C) -- (F) node[weight, midway] {2};
+\draw[edge] (E) -- (F) node[weight, midway] {3};
+\draw[edge] (E) -- (B) node[weight, midway] {2};
+\draw[edge] (F) -- (B) node[weight, midway] {6};
+\draw[edge] (D) -- (B) node[weight, midway] {1};
+\draw[edge] (B) -- (G) node[weight, midway] {2};
+\draw[edge] (F) -- (G) node[weight, midway] {5};
+
+\end{tikzpicture}
+\end{center}
+
+% PICTURE 3 - Processing Goal Vertex B
+\subsection{Processing Goal Vertex B}
+\begin{center}
+\begin{tikzpicture}[
+    node distance=3cm,
+    vertex/.style={circle, draw, fill=gray!70, minimum size=1cm, font=\Large\bfseries},
+    edge/.style={draw, thick, color=purple!70},
+    weight/.style={fill=white, inner sep=2pt, font=\large}
+]
+
+% Define node positions
+\node[vertex, fill=red!60!black] (A) at (-4, 0) {A};
+\node[vertex, fill=red!60!black] (C) at (-1, 2) {C};
+\node[vertex, fill=red!60!black] (F) at (-1, -2) {F};
+\node[vertex, fill=red!60!black] (E) at (2, 0) {E};
+\node[vertex, fill=red!60!black] (D) at (4, 2) {D};
+\node[vertex, fill=green!60!black] (B) at (6, 0) {B};
+\node[vertex, fill=red!60!black] (G) at (4, -2) {G};
+
+% Add distance labels above vertices
+\node[above=0.3cm of A, font=\large\bfseries] {$\infty$};
+\node[above=0.3cm of C, font=\large\bfseries] {$\infty$};
+\node[above=0.3cm of F, font=\large\bfseries] {6};
+\node[above=0.3cm of E, font=\large\bfseries] {2};
+\node[above=0.3cm of D, font=\large\bfseries] {1};
+\node[above=0.3cm of B, font=\large\bfseries] {0};
+\node[above=0.3cm of G, font=\large\bfseries] {2};
+
+% Add source vertex label
+\node[below=0.5cm of A, draw, fill=white, rounded corners, inner sep=4pt] {Source Vertex};
+
+% Add goal vertex label
+\node[below=0.5cm of B, draw, fill=white, rounded corners, inner sep=4pt] {Goal Vertex};
+
+% Draw edges with weights and distance calculations
+\draw[edge] (A) -- (C) node[weight, midway] {3};
+\draw[edge] (A) -- (F) node[weight, midway] {2};
+\draw[edge] (C) -- (D) node[weight, midway] {4};
+\draw[edge] (C) -- (E) node[weight, midway] {1};
+\draw[edge] (C) -- (F) node[weight, midway] {2};
+\draw[edge] (E) -- (F) node[weight, midway] {3};
+\draw[edge] (E) -- (B) node[weight, midway] {2} node[pos=0.7, below=1mm, color=black] {$d_E = 2$};
+\draw[edge] (F) -- (B) node[weight, midway] {6} node[pos=0.7, below=1mm, color=black] {$d_F = 6$};
+\draw[edge] (D) -- (B) node[weight, midway] {1} node[pos=0.7, above=1mm, color=black] {$d_D = 1$};
+\draw[edge] (B) -- (G) node[weight, midway] {2} node[pos=0.7, below=1mm, color=black] {$d_G = 2$};
+\draw[edge] (F) -- (G) node[weight, midway] {5};
+
+% Blue arrows for parent pointers (pointing from vertex to parent)
+\draw[->, blue, thick] ($ (D)!0.15!(B) $) -- ($ (D)!0.3!(B) $);
+\draw[->, blue, thick] ($ (E)!0.15!(B) $) -- ($ (E)!0.3!(B) $);
+\draw[->, blue, thick] ($ (F)!0.15!(B) $) -- ($ (F)!0.3!(B) $);
+\draw[->, blue, thick] ($ (G)!0.15!(B) $) -- ($ (G)!0.3!(B) $);
+
+\end{tikzpicture}
+\end{center}
+
+% PICTURE 4 - Processing Vertex D
+\subsection{Processing Vertex D}
+\begin{center}
+\begin{tikzpicture}[
+    node distance=3cm,
+    vertex/.style={circle, draw, fill=gray!70, minimum size=1cm, font=\Large\bfseries},
+    edge/.style={draw, thick, color=purple!70},
+    weight/.style={fill=white, inner sep=2pt, font=\large}
+]
+
+% Define node positions
+\node[vertex, fill=red!60!black] (A) at (-4, 0) {A};
+\node[vertex, fill=red!60!black] (C) at (-1, 2) {C};
+\node[vertex, fill=red!60!black] (F) at (-1, -2) {F};
+\node[vertex, fill=red!60!black] (E) at (2, 0) {E};
+\node[vertex, fill=green!60!black] (D) at (4, 2) {D};
+\node[vertex, fill=green!60!black] (B) at (6, 0) {B};
+\node[vertex, fill=red!60!black] (G) at (4, -2) {G};
+
+% Add distance labels above vertices
+\node[above=0.3cm of A, font=\large\bfseries] {$\infty$};
+\node[above=0.3cm of C, font=\large\bfseries] {5};
+\node[above=0.3cm of F, font=\large\bfseries] {6};
+\node[above=0.3cm of E, font=\large\bfseries] {2};
+\node[above=0.3cm of D, font=\large\bfseries] {1};
+\node[above=0.3cm of B, font=\large\bfseries] {0};
+\node[above=0.3cm of G, font=\large\bfseries] {2};
+
+% Add source vertex label
+\node[below=0.5cm of A, draw, fill=white, rounded corners, inner sep=4pt] {Source Vertex};
+
+% Add goal vertex label
+\node[below=0.5cm of B, draw, fill=white, rounded corners, inner sep=4pt] {Goal Vertex};
+
+% Draw edges with weights
+\draw[edge] (A) -- (C) node[weight, midway] {3};
+\draw[edge] (A) -- (F) node[weight, midway] {2};
+\draw[edge] (C) -- (D) node[weight, midway] {4} node[pos=0.6, left=1mm, color=black] {$d_C = 5$};
+\draw[edge] (C) -- (E) node[weight, midway] {1};
+\draw[edge] (C) -- (F) node[weight, midway] {2};
+\draw[edge] (E) -- (F) node[weight, midway] {3};
+\draw[edge] (E) -- (B) node[weight, midway] {2};
+\draw[edge] (F) -- (B) node[weight, midway] {6};
+\draw[edge] (D) -- (B) node[weight, midway] {1};
+\draw[edge] (B) -- (G) node[weight, midway] {2};
+\draw[edge] (F) -- (G) node[weight, midway] {5};
+
+% Blue arrows
+\draw[->, blue, thick] ($ (C)!0.15!(D) $) -- ($ (C)!0.3!(D) $);
+\draw[->, blue, thick] ($ (D)!0.15!(B) $) -- ($ (D)!0.3!(B) $);
+\draw[->, blue, thick] ($ (E)!0.15!(B) $) -- ($ (E)!0.3!(B) $);
+\draw[->, blue, thick] ($ (F)!0.15!(B) $) -- ($ (F)!0.3!(B) $);
+\draw[->, blue, thick] ($ (G)!0.15!(B) $) -- ($ (G)!0.3!(B) $);
+
+\end{tikzpicture}
+\end{center}
+
+% PICTURE 5 - Processing Vertex E
+\subsection{Processing Vertex E}
+\begin{center}
+\begin{tikzpicture}[
+    node distance=3cm,
+    vertex/.style={circle, draw, fill=gray!70, minimum size=1cm, font=\Large\bfseries},
+    edge/.style={draw, thick, color=purple!70},
+    weight/.style={fill=white, inner sep=2pt, font=\large}
+]
+
+% Define node positions
+\node[vertex, fill=red!60!black] (A) at (-4, 0) {A};
+\node[vertex, fill=red!60!black] (C) at (-1, 2) {C};
+\node[vertex, fill=red!60!black] (F) at (-1, -2) {F};
+\node[vertex, fill=green!60!black] (E) at (2, 0) {E};
+\node[vertex, fill=green!60!black] (D) at (4, 2) {D};
+\node[vertex, fill=green!60!black] (B) at (6, 0) {B};
+\node[vertex, fill=green!60!black] (G) at (4, -2) {G};
+
+% Add distance labels above vertices
+\node[above=0.3cm of A, font=\large\bfseries] {$\infty$};
+\node[above=0.3cm of C, font=\large\bfseries] {3};
+\node[above=0.3cm of F, font=\large\bfseries] {5};
+\node[above=0.3cm of E, font=\large\bfseries] {2};
+\node[above=0.3cm of D, font=\large\bfseries] {1};
+\node[above=0.3cm of B, font=\large\bfseries] {0};
+\node[above=0.3cm of G, font=\large\bfseries] {2};
+
+% Add source vertex label
+\node[below=0.5cm of A, draw, fill=white, rounded corners, inner sep=4pt] {Source Vertex};
+
+% Add goal vertex label
+\node[below=0.5cm of B, draw, fill=white, rounded corners, inner sep=4pt] {Goal Vertex};
+
+% Draw edges with weights and calculations
+\draw[edge] (A) -- (C) node[weight, midway] {3};
+\draw[edge] (A) -- (F) node[weight, midway] {2};
+\draw[edge] (C) -- (D) node[weight, midway] {4};
+\draw[edge] (C) -- (E) node[weight, midway] {1} node[pos=0.6, above=1mm, color=black] {$d_C = 3$};
+\draw[edge] (C) -- (F) node[weight, midway] {2};
+\draw[edge] (E) -- (F) node[weight, midway] {3} node[pos=0.4, above=1mm, color=black] {$d_F = 5$};
+\draw[edge] (E) -- (B) node[weight, midway] {2};
+\draw[edge] (F) -- (B) node[weight, midway] {6};
+\draw[edge] (D) -- (B) node[weight, midway] {1};
+\draw[edge] (B) -- (G) node[weight, midway] {2};
+\draw[edge] (F) -- (G) node[weight, midway] {5};
+
+% Blue arrows
+\draw[->, blue, thick] ($ (C)!0.15!(E) $) -- ($ (C)!0.3!(E) $);
+\draw[->, blue, thick] ($ (F)!0.15!(E) $) -- ($ (F)!0.3!(E) $);
+\draw[->, blue, thick] ($ (D)!0.15!(B) $) -- ($ (D)!0.3!(B) $);
+\draw[->, blue, thick] ($ (E)!0.15!(B) $) -- ($ (E)!0.3!(B) $);
+\draw[->, blue, thick] ($ (G)!0.15!(B) $) -- ($ (G)!0.3!(B) $);
+
+\end{tikzpicture}
+\end{center}
+
+% PICTURE 6 - Processing Vertex G
+\subsection{Processing Vertex G}
+\begin{center}
+\begin{tikzpicture}[
+    node distance=3cm,
+    vertex/.style={circle, draw, fill=gray!70, minimum size=1cm, font=\Large\bfseries},
+    edge/.style={draw, thick, color=purple!70},
+    weight/.style={fill=white, inner sep=2pt, font=\large}
+]
+
+% Define node positions
+\node[vertex, fill=red!60!black] (A) at (-4, 0) {A};
+\node[vertex, fill=red!60!black] (C) at (-1, 2) {C};
+\node[vertex, fill=red!60!black] (F) at (-1, -2) {F};
+\node[vertex, fill=green!60!black] (E) at (2, 0) {E};
+\node[vertex, fill=green!60!black] (D) at (4, 2) {D};
+\node[vertex, fill=green!60!black] (B) at (6, 0) {B};
+\node[vertex, fill=green!60!black] (G) at (4, -2) {G};
+
+% Add distance labels above vertices
+\node[above=0.3cm of A, font=\large\bfseries] {$\infty$};
+\node[above=0.3cm of C, font=\large\bfseries] {3};
+\node[above=0.3cm of F, font=\large\bfseries] {5};
+\node[above=0.3cm of E, font=\large\bfseries] {2};
+\node[above=0.3cm of D, font=\large\bfseries] {1};
+\node[above=0.3cm of B, font=\large\bfseries] {0};
+\node[above=0.3cm of G, font=\large\bfseries] {2};
+
+% Add source vertex label
+\node[below=0.5cm of A, draw, fill=white, rounded corners, inner sep=4pt] {Source Vertex};
+
+% Add goal vertex label
+\node[below=0.5cm of B, draw, fill=white, rounded corners, inner sep=4pt] {Goal Vertex};
+
+% Draw edges with weights
+\draw[edge] (A) -- (C) node[weight, midway] {3};
+\draw[edge] (A) -- (F) node[weight, midway] {2};
+\draw[edge] (C) -- (D) node[weight, midway] {4};
+\draw[edge] (C) -- (E) node[weight, midway] {1};
+\draw[edge] (C) -- (F) node[weight, midway] {2};
+\draw[edge] (E) -- (F) node[weight, midway] {3};
+\draw[edge] (E) -- (B) node[weight, midway] {2};
+\draw[edge] (F) -- (B) node[weight, midway] {6};
+\draw[edge] (D) -- (B) node[weight, midway] {1};
+\draw[edge] (B) -- (G) node[weight, midway] {2};
+\draw[edge] (F) -- (G) node[weight, midway] {5};
+
+% Blue arrows (no change for F since 7 > 5)
+\draw[->, blue, thick] ($ (C)!0.15!(E) $) -- ($ (C)!0.3!(E) $);
+\draw[->, blue, thick] ($ (F)!0.15!(E) $) -- ($ (F)!0.3!(E) $);
+\draw[->, blue, thick] ($ (D)!0.15!(B) $) -- ($ (D)!0.3!(B) $);
+\draw[->, blue, thick] ($ (E)!0.15!(B) $) -- ($ (E)!0.3!(B) $);
+\draw[->, blue, thick] ($ (G)!0.15!(B) $) -- ($ (G)!0.3!(B) $);
+
+\end{tikzpicture}
+\end{center}
+
+% PICTURE 7 - Processing Vertex C
+\subsection{Processing Vertex C}
+\begin{center}
+\begin{tikzpicture}[
+    node distance=3cm,
+    vertex/.style={circle, draw, fill=gray!70, minimum size=1cm, font=\Large\bfseries},
+    edge/.style={draw, thick, color=purple!70},
+    weight/.style={fill=white, inner sep=2pt, font=\large}
+]
+
+% Define node positions
+\node[vertex, fill=red!60!black] (A) at (-4, 0) {A};
+\node[vertex, fill=green!60!black] (C) at (-1, 2) {C};
+\node[vertex, fill=red!60!black] (F) at (-1, -2) {F};
+\node[vertex, fill=green!60!black] (E) at (2, 0) {E};
+\node[vertex, fill=green!60!black] (D) at (4, 2) {D};
+\node[vertex, fill=green!60!black] (B) at (6, 0) {B};
+\node[vertex, fill=green!60!black] (G) at (4, -2) {G};
+
+% Add distance labels above vertices
+\node[above=0.3cm of A, font=\large\bfseries] {6};
+\node[above=0.3cm of C, font=\large\bfseries] {3};
+\node[above=0.3cm of F, font=\large\bfseries] {5};
+\node[above=0.3cm of E, font=\large\bfseries] {2};
+\node[above=0.3cm of D, font=\large\bfseries] {1};
+\node[above=0.3cm of B, font=\large\bfseries] {0};
+\node[above=0.3cm of G, font=\large\bfseries] {2};
+
+% Add source vertex label
+\node[below=0.5cm of A, draw, fill=white, rounded corners, inner sep=4pt] {Source Vertex};
+
+% Add goal vertex label
+\node[below=0.5cm of B, draw, fill=white, rounded corners, inner sep=4pt] {Goal Vertex};
+
+% Draw edges with weights
+\draw[edge] (A) -- (C) node[weight, midway] {3} node[pos=0.3, above=4mm, color=black] {$d_A = 6$};
+\draw[edge] (A) -- (F) node[weight, midway] {2};
+\draw[edge] (C) -- (D) node[weight, midway] {4};
+\draw[edge] (C) -- (E) node[weight, midway] {1};
+\draw[edge] (C) -- (F) node[weight, midway] {2};
+\draw[edge] (E) -- (F) node[weight, midway] {3};
+\draw[edge] (E) -- (B) node[weight, midway] {2};
+\draw[edge] (F) -- (B) node[weight, midway] {6};
+\draw[edge] (D) -- (B) node[weight, midway] {1};
+\draw[edge] (B) -- (G) node[weight, midway] {2};
+\draw[edge] (F) -- (G) node[weight, midway] {5};
+
+% Blue arrows
+\draw[->, blue, thick] ($ (A)!0.15!(C) $) -- ($ (A)!0.3!(C) $);
+\draw[->, blue, thick] ($ (C)!0.15!(E) $) -- ($ (C)!0.3!(E) $);
+\draw[->, blue, thick] ($ (F)!0.15!(E) $) -- ($ (F)!0.3!(E) $);
+\draw[->, blue, thick] ($ (D)!0.15!(B) $) -- ($ (D)!0.3!(B) $);
+\draw[->, blue, thick] ($ (E)!0.15!(B) $) -- ($ (E)!0.3!(B) $);
+\draw[->, blue, thick] ($ (G)!0.15!(B) $) -- ($ (G)!0.3!(B) $);
+
+\end{tikzpicture}
+\end{center}
+
+% PICTURE 8 - Final Result with Shortest Path
+\subsection{Final Result: Shortest Path from A to B}
+\begin{center}
+\begin{tikzpicture}[
+    node distance=3cm,
+    vertex/.style={circle, draw, fill=gray!70, minimum size=1cm, font=\Large\bfseries},
+    edge/.style={draw, thick, color=purple!70},
+    weight/.style={fill=white, inner sep=2pt, font=\large}
+]
+
+% Define node positions
+\node[vertex, fill=green!60!black] (A) at (-4, 0) {A};
+\node[vertex, fill=green!60!black] (C) at (-1, 2) {C};
+\node[vertex, fill=green!60!black] (F) at (-1, -2) {F};
+\node[vertex, fill=green!60!black] (E) at (2, 0) {E};
+\node[vertex, fill=green!60!black] (D) at (4, 2) {D};
+\node[vertex, fill=green!60!black] (B) at (6, 0) {B};
+\node[vertex, fill=green!60!black] (G) at (4, -2) {G};
+
+% Add distance labels above vertices
+\node[above=0.3cm of A, font=\large\bfseries] {6};
+\node[above=0.3cm of C, font=\large\bfseries] {3};
+\node[above=0.3cm of F, font=\large\bfseries] {5};
+\node[above=0.3cm of E, font=\large\bfseries] {2};
+\node[above=0.3cm of D, font=\large\bfseries] {1};
+\node[above=0.3cm of B, font=\large\bfseries] {0};
+\node[above=0.3cm of G, font=\large\bfseries] {2};
+
+% Add source vertex label
+\node[below=0.5cm of A, draw, fill=white, rounded corners, inner sep=4pt] {Source Vertex};
+
+% Add goal vertex label
+\node[below=0.5cm of B, draw, fill=white, rounded corners, inner sep=4pt] {Goal Vertex};
+
+% Shortest path from A to B (thick partially transparent blue line)
+\draw[blue, line width=4pt, opacity=0.6] (A) -- (C) -- (E) -- (B);
+
+% Draw edges with weights
+\draw[edge] (A) -- (C) node[weight, midway] {3};
+\draw[edge] (A) -- (F) node[weight, midway] {2};
+\draw[edge] (C) -- (D) node[weight, midway] {4};
+\draw[edge] (C) -- (E) node[weight, midway] {1};
+\draw[edge] (C) -- (F) node[weight, midway] {2};
+\draw[edge] (E) -- (F) node[weight, midway] {3};
+\draw[edge] (E) -- (B) node[weight, midway] {2};
+\draw[edge] (F) -- (B) node[weight, midway] {6};
+\draw[edge] (D) -- (B) node[weight, midway] {1};
+\draw[edge] (B) -- (G) node[weight, midway] {2};
+\draw[edge] (F) -- (G) node[weight, midway] {5};
+
+% Blue arrows showing final parent pointers
+\draw[->, blue, thick] ($ (A)!0.15!(C) $) -- ($ (A)!0.3!(C) $);
+\draw[->, blue, thick] ($ (C)!0.15!(E) $) -- ($ (C)!0.3!(E) $);
+\draw[->, blue, thick] ($ (F)!0.15!(E) $) -- ($ (F)!0.3!(E) $);
+\draw[->, blue, thick] ($ (D)!0.15!(B) $) -- ($ (D)!0.3!(B) $);
+\draw[->, blue, thick] ($ (E)!0.15!(B) $) -- ($ (E)!0.3!(B) $);
+\draw[->, blue, thick] ($ (G)!0.15!(B) $) -- ($ (G)!0.3!(B) $);
+
+\end{tikzpicture}
+\end{center}
+
+\textbf{Shortest Path:} A $\rightarrow$ C $\rightarrow$ E $\rightarrow$ B with total cost 6
+
 
 \end{document}
