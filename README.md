@@ -34,7 +34,6 @@ This aims to cover what I think the key history of path planning algorithms is f
 - CBF-QP - Control Barrier Functions with QP (safety guarantees)
 
 
-
 # Directory Structure
 ```
 motion_planning_portfolio/
