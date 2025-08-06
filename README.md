@@ -28,7 +28,10 @@ This aims to cover what I think the key history of path planning algorithms is f
 - Lightning Framework
 
 ## State of the Art (What I think is cutting edge now)
-- Will come back to this...
+- MPPI - Model Predictive Path Integral
+- Diffusion Policy - Diffusion for Trajectory Generation
+- DDP / iLQG - Differential Dynamic Programming
+- CBF-QP - Control Barrier Functions with QP (safety guarantees)
 
 
 
@@ -165,3 +168,5 @@ Add Obstacles: Extend environment with basic collision detection
 Second Algorithm: A* (builds on Dijkstra)
 Benchmarking Framework: Compare Dijkstra vs A*
 Continue with RRT, RRT, etc.*
+
+
